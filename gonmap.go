@@ -4,15 +4,26 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
+	"strings"
 )
 
 func main() {
 	fmt.Println("go nmap")
-	results, err := getIPv4()
+	ipv4address, err := getIPv4()
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(results)
+	valid := is_valid_ipv4(ipv4address)
+	if valid != true {
+		fmt.Println("error: unable to locate valid ipv4 address")
+	}
+	fmt.Printf("IPv4 LAN address:\t%v\n", ipv4address)
+	fmt.Printf("Scanning Subnet:\t%v\n", ipv4address)
+}
+
+func getSubnet(ip string) string {
+
 }
 
 //func scan(ip string) []string {
@@ -56,4 +67,37 @@ func getIPv4() (string, error) {
 		}
 	}
 	return "", errors.New("no IPV4 address found")
+}
+
+func is_valid_ipv4(ip string) bool {
+
+	var result bool
+
+	if ip == "" {
+		result = false
+		return result
+	}
+
+	s := strings.Split(ip, ".")
+	for _, v := range s {
+		if v[:1] == "0" && len(v) >= 2 {
+			result = false
+			break
+		}
+		y, err := strconv.Atoi(v) // convert str to int for comparison
+		if y < 0 || y >= 256 {
+			result = false
+			break
+		} else if len(s) != 4 {
+			result = false
+			break
+		} else if err != nil {
+			result = false
+			break
+		} else {
+			result = true
+		}
+	}
+	return result
+
 }
