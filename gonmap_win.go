@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-ping/ping"
+	"github.com/joewpat/gonmap/tree/master/go-ping"
 	"github.com/mostlygeek/arp"
 )
 
@@ -58,11 +58,12 @@ func testconnection(target string) (float64, time.Duration) {
 	if err != nil {
 		panic(err)
 	}
+	pinger.SetPrivileged(true)
 	pinger.Timeout = timeout
 	pinger.Count = 1
 	err = pinger.Run() // blocks until finished
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 	stats := pinger.Statistics() // get send/receive/rtt stats | TODO: get hostnames if possible
 	d, _ := time.ParseDuration("0.01ms")
