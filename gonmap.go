@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	t0 := time.Now()
 	fmt.Printf("gonmap - lightweight network scanner utility\n\n")
 	ipv4address, err := getIPv4()
 	if err != nil {
@@ -41,20 +42,23 @@ func main() {
 		}
 	}
 	total := len(targets)
-	fmt.Printf("\nTargets Scanned: %v\tUp: %v\n\n",total,hostsAvailable)
+	t1 := time.Now()
+	elapsed := t1.Sub(t0)
+	d, _ := time.ParseDuration("1s")
+	fmt.Printf("\nTargets Scanned: %v\tUp: %v\nTotal Scan Time: %v\n\n",total,hostsAvailable,elapsed.Round(d))
 }
 /*
 testconnection will take a target ipv4 address and return packetloss, rtt
 This function can be used to quickly verify a host is responding to ICMP packets
 */
 func testconnection(target string) (float64, time.Duration) {
-	timeout := time.Millisecond * 500
+	timeout := time.Millisecond * 100
 	pinger, err := ping.NewPinger(target)
 	if err != nil {
 		panic(err)
 	}
 	pinger.Timeout = timeout
-	pinger.Count = 4
+	pinger.Count = 1
 	err = pinger.Run() // blocks until finished
 	if err != nil {
 		panic(err)
