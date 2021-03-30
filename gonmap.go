@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	//"math"
 
 	"github.com/go-ping/ping"
 	"github.com/mostlygeek/arp"
