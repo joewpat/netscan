@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joewpat/gonmap/tree/master/go-ping"
+	"github.com/go-ping/ping"
 	"github.com/mostlygeek/arp"
 )
 
