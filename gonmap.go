@@ -6,32 +6,76 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
+	//"math"
+
+	"github.com/go-ping/ping"
+	"github.com/mostlygeek/arp"
 )
 
 func main() {
-	fmt.Println("go nmap")
+	fmt.Printf("gonmap - lightweight network scanner utility\n\n")
 	ipv4address, err := getIPv4()
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 	valid := is_valid_ipv4(ipv4address)
 	if valid != true {
 		fmt.Println("error: unable to locate valid ipv4 address")
 	}
 	fmt.Printf("IPv4 LAN address:\t%v\n", ipv4address)
-	fmt.Printf("Scanning Subnet:\t%v\n", ipv4address)
+	targets := getTargets(ipv4address)
+	hostsAvailable := 0
+	for _, v := range targets {
+		l, r := testconnection(v)
+		if l <= 99{ //filter out down clients
+			host, _ := net.LookupAddr(v)
+			if len(host) == 0{
+				host = append(host,"N/A\t")
+			}
+			m:= arp.Search(v) // get MAC address
+			if m == ""{
+				m = "N/A\t\t"
+			}
+			fmt.Println("Host: ", v, "\tRTT: ", r,"\tMAC:\t",m,"\tHostname:",host[0])
+			hostsAvailable++
+		}
+	}
+	total := len(targets)
+	fmt.Printf("\nTargets Scanned: %v\tUp: %v\n\n",total,hostsAvailable)
 }
-
-func getSubnet(ip string) string {
-
+/*
+testconnection will take a target ipv4 address and return packetloss, rtt
+This function can be used to quickly verify a host is responding to ICMP packets
+*/
+func testconnection(target string) (float64, time.Duration) {
+	timeout := time.Millisecond * 500
+	pinger, err := ping.NewPinger(target)
+	if err != nil {
+		panic(err)
+	}
+	pinger.Timeout = timeout
+	pinger.Count = 4
+	err = pinger.Run() // blocks until finished
+	if err != nil {
+		panic(err)
+	}
+	stats := pinger.Statistics() // get send/receive/rtt stats | TODO: get hostnames if possible
+	d, _ := time.ParseDuration("0.01ms")
+	return stats.PacketLoss, stats.AvgRtt.Round(d)
 }
-
-//func scan(ip string) []string {
-//hosts := []string
-//	fmt.Println(getIPv4())
-//	return "scan"
-//}
-
+func getTargets(ip string) []string {
+	split := strings.Split(ip, ".")
+	var iprange []string
+	subnet := split[0] + "." + split[1] + "." + split[2] + "." + "0/24"
+	fmt.Printf("Scanning subnet:\t%v\n\n", subnet)
+	for i := 1; i < 255; i++ {
+		fourthoctet := strconv.Itoa(i)
+		target := split[0] + "." + split[1] + "." + split[2] + "." + fourthoctet
+		iprange = append(iprange, target)
+	}
+	return iprange
+}
 func getIPv4() (string, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
@@ -70,21 +114,18 @@ func getIPv4() (string, error) {
 }
 
 func is_valid_ipv4(ip string) bool {
-
 	var result bool
-
 	if ip == "" {
 		result = false
 		return result
 	}
-
 	s := strings.Split(ip, ".")
 	for _, v := range s {
 		if v[:1] == "0" && len(v) >= 2 {
 			result = false
 			break
 		}
-		y, err := strconv.Atoi(v) // convert str to int for comparison
+		y, err := strconv.Atoi(v) // convert str to int for iteration
 		if y < 0 || y >= 256 {
 			result = false
 			break
@@ -101,3 +142,8 @@ func is_valid_ipv4(ip string) bool {
 	return result
 
 }
+
+/*TODO
+get defaultgateway
+concurrency****
+*/
