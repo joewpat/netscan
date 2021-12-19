@@ -146,8 +146,3 @@ func is_valid_ipv4(ip string) bool {
 	return result
 
 }
-
-/*TODO
-get defaultgateway
-concurrency****
-*/
