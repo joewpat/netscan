@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	valid := is_valid_ipv4(ipv4address)
+	valid := isValidIpv4(ipv4address)
 	if valid != true {
 		fmt.Println("error: unable to locate valid ipv4 address")
 	}
@@ -27,9 +27,9 @@ func main() {
 	targets := getTargets(ipv4address)
 	hostsAvailable := 0
 	for _, v := range targets {
-		l, r := testconnection(v)
+		l, r := testConnection(v)
 		if l <= 99 { //filter out down clients
-			host, _ := net.LookupAddr(v)
+			host, _ := net.LookupAddr(v) //attempt hostname lookup
 			if len(host) == 0 {
 				host = append(host, "N/A\t")
 			}
@@ -49,10 +49,10 @@ func main() {
 }
 
 /*
-testconnection will take a target ipv4 address and return packetloss, rtt
+testConnection will take a target ipv4 address and return packetloss, rtt
 This function can be used to quickly verify a host is responding to ICMP packets
 */
-func testconnection(target string) (float64, time.Duration) {
+func testConnection(target string) (float64, time.Duration) {
 	timeout := time.Millisecond * 100
 	pinger, err := ping.NewPinger(target)
 	if err != nil {
@@ -117,7 +117,7 @@ func getIPv4() (string, error) {
 	return "", errors.New("no IPV4 address found")
 }
 
-func is_valid_ipv4(ip string) bool {
+func isValidIpv4(ip string) bool {
 	var result bool
 	if ip == "" {
 		result = false
